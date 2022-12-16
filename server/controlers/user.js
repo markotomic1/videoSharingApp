@@ -19,9 +19,60 @@ export const updateUser = async (req, res, next) => {
     return next(createError(403, "You can update only your account"));
   }
 };
-export const deleteUser = (req, res, next) => {};
-export const getUser = (req, res, next) => {};
-export const subscribe = (req, res, next) => {};
-export const unsubscribe = (req, res, next) => {};
-export const like = (req, res, next) => {};
-export const dislike = (req, res, next) => {};
+export const deleteUser = async (req, res, next) => {
+  if (req.params.id === req.user.id) {
+    try {
+      await User.findByIdAndDelete(req.params.id);
+      res.status(200).json("User has been successfully deleted");
+    } catch (error) {
+      next(error);
+    }
+  } else {
+    return next(createError(403, "You can only delete your account"));
+  }
+};
+export const getUser = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.params.id);
+    const { password, ...other } = user._doc;
+    res.status(200).json(other);
+  } catch (error) {
+    next(error);
+  }
+};
+export const subscribe = async (req, res, next) => {
+  try {
+    await User.findByIdAndUpdate(req.user.id, {
+      $push: { subscribedUsers: req.params.id },
+    });
+    await User.findByIdAndUpdate(req.params.id, { $inc: { subscribers: 1 } });
+
+    res.status(200).json("Subscripton successfull");
+  } catch (error) {
+    next(error);
+  }
+};
+export const unsubscribe = async (req, res, next) => {
+  try {
+    await User.findByIdAndUpdate(req.user.id, {
+      $pull: { subscribedUsers: req.params.id },
+    });
+    await User.findByIdAndUpdate(req.params.id, { $inc: { subscribers: -1 } });
+
+    res.status(200).json("Successfully unsubscribed");
+  } catch (error) {
+    next(error);
+  }
+};
+export const like = async (req, res, next) => {
+  try {
+  } catch (error) {
+    next(error);
+  }
+};
+export const dislike = async (req, res, next) => {
+  try {
+  } catch (error) {
+    next(error);
+  }
+};
