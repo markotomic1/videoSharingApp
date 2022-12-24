@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import axios from "axios";
+import { useDispatch } from "react-redux";
+import { loginFailure, loginStart, loginSuccess } from "../redux/userSlice";
+import { auth, provider } from "../firebase.js";
+import { signInWithPopup } from "firebase/auth";
 
 const Container = styled.div`
   display: flex;
@@ -20,7 +24,7 @@ const Wrapper = styled.div`
   gap: 10px;
 `;
 const Title = styled.h1`
-  font-size: 22px;
+  font-size: 18px;
 `;
 
 const SubTitle = styled.h2`
@@ -31,7 +35,7 @@ const SubTitle = styled.h2`
 const Input = styled.input`
   border: 1px solid ${({ theme }) => theme.soft};
   border-radius: 3px;
-  padding: 10px;
+  padding: 5px;
   background-color: transparent;
   width: 100%;
   color: ${({ theme }) => theme.text};
@@ -40,7 +44,7 @@ const Input = styled.input`
 const Button = styled.button`
   border-radius: 3px;
   border: none;
-  padding: 5px 20px;
+  padding: 3px 20px;
   cursor: pointer;
   background-color: ${({ theme }) => theme.soft};
   color: ${({ theme }) => theme.textSoft};
@@ -64,15 +68,37 @@ const Login = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const dispatch = useDispatch();
 
   const handleClick = async (e) => {
     e.preventDefault();
+    dispatch(loginStart());
     try {
       const res = await axios.post("/auth/login", { name, password });
+      dispatch(loginSuccess(res.data));
       console.log(res.data);
     } catch (error) {
+      dispatch(loginFailure());
       console.log(error);
     }
+  };
+  const signInWithGoogle = async () => {
+    dispatch(loginStart());
+    signInWithPopup(auth, provider)
+      .then((result) => {
+        axios
+          .post("/auth/google", {
+            name: result.user.displayName,
+            email: result.user.email,
+            img: result.user.photoURL,
+          })
+          .then((res) => {
+            dispatch(loginSuccess(res.data));
+          });
+      })
+      .catch((error) => {
+        dispatch(loginFailure());
+      });
   };
   return (
     <Container>
@@ -90,6 +116,8 @@ const Login = () => {
           onChange={(e) => setPassword(e.target.value)}
         />
         <Button onClick={handleClick}>Sign in</Button>
+        <Title>Or</Title>
+        <Button onClick={signInWithGoogle}>Sign in with Google</Button>
         <Title>Or</Title>
         <Title>Sign Up</Title>
 

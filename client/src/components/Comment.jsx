@@ -1,5 +1,7 @@
-import React from "react";
+import axios from "axios";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
+import { format } from "timeago.js";
 
 const Container = styled.div`
   display: flex;
@@ -30,19 +32,26 @@ const Date = styled.span`
 const Text = styled.span`
   font-size: 14px;
 `;
-const Comment = () => {
+const Comment = ({ comment }) => {
+  const [channel, setChannel] = useState({});
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await axios.get(`/users/find/${comment.userId}`);
+        setChannel(res.data);
+      } catch (error) {}
+    };
+    fetchUser();
+  }, [comment.userId]);
   return (
     <Container>
-      <Avatar src='https://freepngimg.com/thumb/youtube/62644-profile-account-google-icons-computer-user-iconfinder.png' />
+      <Avatar src={channel?.img} />
       <Details>
         <Name>
-          John Doe <Date>1 day ago</Date>
+          {channel?.name} <Date>{format(channel?.createdAt)}</Date>
         </Name>
-        <Text>
-          Lorem ipsum dolor sit amet, consectetur adipisicing elit. Voluptas
-          veritatis, quis alias tempora odit cupiditate eaque corporis nulla
-          neque eveniet.
-        </Text>
+        <Text>{comment.desc}</Text>
       </Details>
     </Container>
   );
